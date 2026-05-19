@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pygithub
+anthropic
+qdrant-client
+tree-sitter
+streamlit
+ragas
+python-dotenv
