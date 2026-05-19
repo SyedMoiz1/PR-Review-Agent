@@ -10,7 +10,7 @@ An AI-powered GitHub PR review agent that posts inline, codebase-grounded review
 
 Most LLM code review tools operate on the diff alone. This agent retrieves semantically relevant context from the full codebase before generating comments — so it can flag inconsistencies with existing patterns, not just surface-level issues in the changed lines.
 
-Built in 12 days. Eval harness ships with 15 labelled PR fixtures and RAGAS scores tracked on every run.
+Eval harness ships with 15 labelled PR fixtures and RAGAS scores tracked on every run.
 
 ---
 
