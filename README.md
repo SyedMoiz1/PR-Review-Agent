@@ -57,7 +57,7 @@ At review time, each changed hunk from the diff is embedded and queried against 
 
 **3. Agentic Loop**
 
-The LLM runs inside a LangChain tool loop with a single tool: `retrieve_context(query)`. The model decides autonomously when it needs more context, issues its own retrieval queries, and iterates — up to a hard cap of 3 rounds — before producing its final review. The 3-round cap keeps API costs bounded while covering the vast majority of real review scenarios.
+The LLM runs inside a LangChain tool loop with a single tool: `retrieve_context(query)`. The model decides autonomously when it needs more context, issues its own retrieval queries, and iterates — up to a hard cap of 3 rounds — before producing its final review. The 3-round cap keeps API cost~s bounded while covering the vast majority of real review scenarios.
 
 This self-directed retrieval is the architectural choice that separates this from a naive RAG pipeline. The agent can ask "how does this codebase handle auth elsewhere?" before commenting on an auth change, rather than receiving a fixed context window and generating from it.
 
