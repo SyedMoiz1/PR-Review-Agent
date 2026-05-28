@@ -1,6 +1,6 @@
 # PR Review Agent
 
-An AI-powered GitHub PR review agent that posts inline, codebase-grounded review commentsm, indistinguishable from a human reviewer.
+An AI-powered GitHub PR review agent that posts inline, codebase-grounded review comments, indistinguishable from a human reviewer.
 
 **Stack:** Python · FastAPI · PyGithub · tree-sitter · OpenAI (`text-embedding-3-small`) · Qdrant · LangChain · RAGAS · Streamlit · Fly.io
 
