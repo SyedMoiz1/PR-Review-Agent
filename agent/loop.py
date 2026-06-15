@@ -6,7 +6,7 @@ from github_parsing.diff_parser import get_pr_diff
 from retrieval.retriever import retrieve_context
 import anthropic
 from dotenv import load_dotenv
-from prompt import SYSTEM_PROMPT
+from agent.prompt import SYSTEM_PROMPT
 import json
 import re
 
@@ -84,7 +84,7 @@ def extract_json(text: str) -> list[dict]:
     except json.JSONDecodeError:
         return []
 
-def run_review(repo_name: str, pr_number: int, commit_sha: str) -> list[dict]:
+def run_review(repo_name: str, pr_number: int) -> list[dict]:
     """
     Run the full PR review pipeline:
     - Parse diff
@@ -151,5 +151,5 @@ def run_review(repo_name: str, pr_number: int, commit_sha: str) -> list[dict]:
 
 if __name__ == "__main__":
 
-    run_review("SyedMoiz1/test-repo", 1, "bd7f7556f6800363c2399f7313b360e5a2e11b9f")
+    run_review("SyedMoiz1/test-repo", 1)
 
