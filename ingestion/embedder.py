@@ -1,10 +1,10 @@
 # embedding generation and qdrant upsert
 import os
-from dotenv import load_dotenv
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from chunker import chunk_repository
+from dotenv import load_dotenv
 import uuid
 
 load_dotenv()
