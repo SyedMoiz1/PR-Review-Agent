@@ -1,0 +1,18 @@
+{
+  "id": "07-mutable-default",
+  "title": "Add cart helper",
+  "files": [
+    {
+      "filename": "shopapp/cart.py",
+      "patch": "@@ -0,0 +1,6 @@\n+from shopapp.money import to_money\n+\n+\n+def add_to_cart(item: dict, cart: list = []) -> list:\n+    cart.append({\"price\": to_money(item[\"price\"]), \"quantity\": item[\"quantity\"]})\n+    return cart"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/cart.py",
+      "line_number": 4,
+      "severity": "major",
+      "comment": "Mutable default argument: the same list is shared across calls, so carts leak between users. Default to None and create a new list."
+    }
+  ]
+}

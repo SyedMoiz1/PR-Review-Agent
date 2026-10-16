@@ -1,0 +1,18 @@
+{
+  "id": "01-sql-injection",
+  "title": "Add order search by status",
+  "files": [
+    {
+      "filename": "shopapp/orders.py",
+      "patch": "@@ -57,3 +57,7 @@\n         )\n     logger.info(\"created order %s for user %s\", order_id, user_id)\n     return order_id\n+\n+\n+def search_orders(user_id: int, status: str) -> list[dict]:\n+    return fetch_all(f\"SELECT * FROM orders WHERE user_id = {user_id} AND status = '{status}'\")"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/orders.py",
+      "line_number": 63,
+      "severity": "critical",
+      "comment": "SQL injection: values are interpolated into the query with an f-string. fetch_all takes a params tuple; use placeholders like the rest of orders.py."
+    }
+  ]
+}

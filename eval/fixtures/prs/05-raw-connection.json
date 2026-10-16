@@ -1,0 +1,24 @@
+{
+  "id": "05-raw-connection",
+  "title": "Add product stock lookup",
+  "files": [
+    {
+      "filename": "shopapp/inventory.py",
+      "patch": "@@ -0,0 +1,9 @@\n+import sqlite3\n+\n+from shopapp.config import DATABASE_PATH\n+\n+\n+def stock_level(product_id: int) -> int:\n+    conn = sqlite3.connect(DATABASE_PATH)\n+    row = conn.execute(\"SELECT stock FROM products WHERE id = ?\", (product_id,)).fetchone()\n+    return row[0]"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/inventory.py",
+      "line_number": 7,
+      "severity": "major",
+      "comment": "Opens a raw sqlite3 connection that is never closed. db.py requires using get_connection()/fetch_one, which commit, roll back and close."
+    },
+    {
+      "file_path": "shopapp/inventory.py",
+      "line_number": 9,
+      "severity": "minor",
+      "comment": "row is None for an unknown product_id, so this raises TypeError. Raise NotFoundError like orders.get_order."
+    }
+  ]
+}

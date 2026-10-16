@@ -1,0 +1,18 @@
+{
+  "id": "04-missing-admin-auth",
+  "title": "Add endpoint to delete a user",
+  "files": [
+    {
+      "filename": "shopapp/api.py",
+      "patch": "@@ -1,6 +1,6 @@\n from shopapp import orders\n from shopapp.auth import require_auth, require_admin\n-from shopapp.db import fetch_all\n+from shopapp.db import fetch_all, execute\n from shopapp.errors import ValidationError\n from shopapp.logging_utils import get_logger, redact\n \n@@ -32,3 +32,9 @@\n def list_users_handler(request: dict) -> dict:\n     logger.info(\"admin listed users: %s\", redact(request))\n     return {\"users\": fetch_all(\"SELECT id, email FROM users\")}\n+\n+\n+def delete_user_handler(request: dict) -> dict:\n+    user_id = parse_int(request.get(\"user_id\"), \"user_id\")\n+    execute(\"DELETE FROM users WHERE id = ?\", (user_id,))\n+    return {\"deleted\": user_id}"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/api.py",
+      "line_number": 37,
+      "severity": "critical",
+      "comment": "Destructive admin endpoint has no authorization. Other admin handlers are wrapped with @require_admin; anyone can delete users here."
+    }
+  ]
+}
