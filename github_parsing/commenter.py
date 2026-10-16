@@ -1,15 +1,39 @@
 # post inline comments via pygithub
 
-
-from dotenv import load_dotenv
 import os
-from github import Github, Auth
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from settings import get_github
 
-load_dotenv()
-token = os.getenv("GITHUB_TOKEN")
 REPO_NAME = os.getenv("GITHUB_REPO")
+SEVERITY_LABEL = {
+    "critical": "🔴 **Critical**",
+    "major": "🟠 **Major**",
+    "minor": "🟡 **Minor**",
+    "nit": "⚪ **Nit**",
+}
 
-g = Github(auth=Auth.Token(token))
+
+def to_github_comments(review: list[dict], allowed: set[tuple[str, int]] | None = None) -> list[dict]:
+    """
+    Convert agent output ({file_path, line_number, severity, comment}) into
+    PyGithub review comments ({path, line, body, side}).
+    If `allowed` is given, drop comments on lines that aren't part of the diff —
+    GitHub rejects the *entire* review if a single comment points outside it.
+    """
+    comments = []
+    for item in review:
+        path, line = item.get("file_path"), item.get("line_number")
+        if not path or not isinstance(line, int) or not item.get("comment"):
+            continue
+        if allowed is not None and (path, line) not in allowed:
+            print(f"Skipping comment outside diff: {path}:{line}")
+            continue
+        label = SEVERITY_LABEL.get(item.get("severity", ""), "")
+        body = f"{label} {item['comment']}".strip()
+        comments.append({"path": path, "line": line, "body": body, "side": "RIGHT"})
+    return comments
+
 
 def post_review(repo_name: str, pr_number: int, commit_sha: str, comments_to_post: list[dict]) -> None:
     """
@@ -20,7 +44,7 @@ def post_review(repo_name: str, pr_number: int, commit_sha: str, comments_to_pos
     - body: str
     - side: str
     """
-    repo = g.get_repo(repo_name)
+    repo = get_github().get_repo(repo_name)
     pr = repo.get_pull(pr_number)
     pr.create_review(
         commit = repo.get_commit(commit_sha),
@@ -40,5 +64,3 @@ if __name__ == "__main__":
         }
     ]
     post_review(REPO_NAME, 7, '0c189cc9feea36c34a58e62fe074320b4604c19c', comments)
-
-

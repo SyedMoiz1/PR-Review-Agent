@@ -1,0 +1,18 @@
+{
+  "id": "02-timing-unsafe-compare",
+  "title": "Add API key check for webhooks",
+  "files": [
+    {
+      "filename": "shopapp/auth.py",
+      "patch": "@@ -59,3 +59,7 @@\n             raise AuthError(\"admin required\")\n         return handler(request, *args, **kwargs)\n     return wrapper\n+\n+\n+def verify_api_key(provided: str, expected: str) -> bool:\n+    return provided == expected"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/auth.py",
+      "line_number": 65,
+      "severity": "major",
+      "comment": "Secret comparison with == leaks timing information. verify_password uses hmac.compare_digest; do the same here."
+    }
+  ]
+}

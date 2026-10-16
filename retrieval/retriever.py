@@ -1,30 +1,14 @@
 # query qdrant, return relevant chunks
-
-# ex. query to find a stored vector most similar to query vector: 
-# ```python
-# search_result = client.query_points(
-#     collection_name="test_collection",
-#     query=[0.2, 0.1, 0.9, 0.7],
-#     with_payload=False,
-#     limit=3
-# ).points
-
-# print(search_result)
 import os
-from openai import OpenAI
-from qdrant_client import QdrantClient
-from dotenv import load_dotenv
-load_dotenv()
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from settings import COLLECTION_NAME, EMBED_MODEL, get_openai, get_qdrant
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-qdrant_client = QdrantClient(host="localhost", port=6333)
-
-COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "codebase")
 
 def retrieve_context(query: str, collection_name: str = COLLECTION_NAME, top_k: int = 5) -> list[dict]:
     """
     Embed query, search Qdrant, return top-k chunks with metadata and scores.
-    Each result should have:
+    Each result has:
     - function_name
     - file_path
     - start_line
@@ -32,32 +16,39 @@ def retrieve_context(query: str, collection_name: str = COLLECTION_NAME, top_k: 
     - source_text
     - score
     """
-    embedded_query = embed_query(query)
-
-    search_result = qdrant_client.query_points(
+    search_result = get_qdrant().query_points(
         collection_name=collection_name,
-        query=embedded_query,
+        query=embed_query(query),
         with_payload=True,
         limit=top_k
     ).points
 
     result_list = []
     for point in search_result:
-        point_dict = {}
-        point_dict['function_name'] = point.payload['function_name']
-        point_dict['file_path'] = point.payload['file_path']
-        point_dict['start_line'] = point.payload['start_line']
-        point_dict['end_line'] = point.payload['end_line']
-        point_dict['source_text'] = point.payload['source_text']
-        point_dict['score'] = point.score
-        result_list.append(point_dict)
-
+        result_list.append({
+            'function_name': point.payload['function_name'],
+            'file_path': point.payload['file_path'],
+            'start_line': point.payload['start_line'],
+            'end_line': point.payload['end_line'],
+            'source_text': point.payload['source_text'],
+            'score': point.score,
+        })
     return result_list
 
 
+def format_results(results: list[dict]) -> str:
+    """Render retrieved chunks as readable text for the LLM (instead of a raw dict repr)."""
+    if not results:
+        return "No matching code found in the indexed codebase."
+    return "\n\n".join(
+        f"# {r['file_path']}:{r['start_line']}-{r['end_line']} ({r['function_name']}, score {r['score']:.3f})\n{r['source_text']}"
+        for r in results
+    )
+
+
 def embed_query(query: str):
-    response = client.embeddings.create(
-        model = "text-embedding-3-small",
+    response = get_openai().embeddings.create(
+        model = EMBED_MODEL,
         input=query
     )
     return response.data[0].embedding

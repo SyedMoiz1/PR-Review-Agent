@@ -1,0 +1,24 @@
+{
+  "id": "15-insecure-token",
+  "title": "Add email verification tokens",
+  "files": [
+    {
+      "filename": "shopapp/verification.py",
+      "patch": "@@ -0,0 +1,11 @@\n+import random\n+import string\n+\n+from shopapp.db import execute\n+\n+\n+def create_verification_token(user_id: int) -> str:\n+    token = \"\".join(random.choice(string.ascii_letters) for _ in range(16))\n+    print(f\"created verification token {token} for {user_id}\")\n+    execute(\"INSERT INTO verification_tokens (token, user_id) VALUES (?, ?)\", (token, user_id))\n+    return token"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/verification.py",
+      "line_number": 8,
+      "severity": "critical",
+      "comment": "Security token generated with the non-cryptographic `random` module, so it is predictable. Use secrets.token_urlsafe like auth.create_session_token."
+    },
+    {
+      "file_path": "shopapp/verification.py",
+      "line_number": 9,
+      "severity": "minor",
+      "comment": "print() leaks the token to stdout. Use get_logger and don't log the token value."
+    }
+  ]
+}

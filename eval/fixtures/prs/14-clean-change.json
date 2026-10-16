@@ -1,0 +1,11 @@
+{
+  "id": "14-clean-change",
+  "title": "Add helper to cancel an order",
+  "files": [
+    {
+      "filename": "shopapp/orders.py",
+      "patch": "@@ -57,3 +57,11 @@\n         )\n     logger.info(\"created order %s for user %s\", order_id, user_id)\n     return order_id\n+\n+\n+def cancel_order(order_id: int, user_id: int) -> None:\n+    order = get_order(order_id)\n+    if order[\"user_id\"] != user_id:\n+        raise ValidationError(\"not your order\")\n+    execute(\"UPDATE orders SET status = ? WHERE id = ?\", (\"cancelled\", order_id))\n+    logger.info(\"cancelled order %s for user %s\", order_id, user_id)"
+    }
+  ],
+  "expected": []
+}

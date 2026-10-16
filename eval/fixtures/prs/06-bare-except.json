@@ -1,0 +1,18 @@
+{
+  "id": "06-bare-except",
+  "title": "Make order total resilient",
+  "files": [
+    {
+      "filename": "shopapp/orders.py",
+      "patch": "@@ -17,8 +17,11 @@\n \n \n def order_total(order_id: int) -> Decimal:\n-    items = fetch_all(\"SELECT price, quantity FROM order_items WHERE order_id = ?\", (order_id,))\n-    return to_money(sum(to_money(i[\"price\"]) * i[\"quantity\"] for i in items))\n+    try:\n+        items = fetch_all(\"SELECT price, quantity FROM order_items WHERE order_id = ?\", (order_id,))\n+        return to_money(sum(to_money(i[\"price\"]) * i[\"quantity\"] for i in items))\n+    except:\n+        return to_money(0)\n \n \n def list_orders(user_id: int, page: int = 1) -> list[dict]:"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/orders.py",
+      "line_number": 23,
+      "severity": "major",
+      "comment": "Bare except swallows every error (including DB failures) and reports a $0.00 total. Let errors propagate or catch a specific exception and log via logger."
+    }
+  ]
+}

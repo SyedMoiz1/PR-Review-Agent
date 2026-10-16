@@ -1,0 +1,18 @@
+{
+  "id": "03-float-money",
+  "title": "Add shipping cost calculation",
+  "files": [
+    {
+      "filename": "shopapp/shipping.py",
+      "patch": "@@ -0,0 +1,6 @@\n+from shopapp.money import to_money\n+\n+\n+def shipping_cost(weight_kg: float, rate_per_kg: float = 4.99) -> float:\n+    cost = weight_kg * rate_per_kg\n+    return round(cost, 2)"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/shipping.py",
+      "line_number": 6,
+      "severity": "major",
+      "comment": "Money is computed with float and round(). The codebase requires Decimal via money.to_money (rounded half-up); float arithmetic gives wrong cents."
+    }
+  ]
+}

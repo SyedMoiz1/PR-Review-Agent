@@ -1,0 +1,24 @@
+{
+  "id": "11-division-by-zero",
+  "title": "Add average order value report",
+  "files": [
+    {
+      "filename": "shopapp/reports.py",
+      "patch": "@@ -0,0 +1,11 @@\n+from decimal import Decimal\n+\n+from shopapp.db import fetch_all\n+from shopapp.money import to_money\n+from shopapp.orders import order_total\n+\n+\n+def average_order_value(user_id: int) -> Decimal:\n+    orders = fetch_all(\"SELECT id FROM orders WHERE user_id = ?\", (user_id,))\n+    total = sum(order_total(o[\"id\"]) for o in orders)\n+    return to_money(total / len(orders))"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/reports.py",
+      "line_number": 11,
+      "severity": "major",
+      "comment": "ZeroDivisionError for users with no orders. Return to_money(0) (or raise ValidationError) when orders is empty."
+    },
+    {
+      "file_path": "shopapp/reports.py",
+      "line_number": 10,
+      "severity": "minor",
+      "comment": "N+1 queries: order_total runs one query per order. Compute totals in one query or batch-load with items_for_orders."
+    }
+  ]
+}

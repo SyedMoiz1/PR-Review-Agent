@@ -6,21 +6,25 @@ from pathlib import Path
 PY_LANGUAGE = Language(tspython.language())
 parser = Parser(PY_LANGUAGE)
 
-def chunk_file(filepath: str) -> list[dict]:
+# directories that never contain code worth indexing
+SKIP_DIRS = {"venv", ".venv", "env", ".git", "node_modules", "__pycache__", "site-packages", "build", "dist"}
+
+def chunk_file(filepath: str, repo_root: str | None = None) -> list[dict]:
     """
     Parse a Python file and return a list of chunks.
     Each chunk is a dict with:
     - function_name: str
-    - file_path: str
-    - start_line: int
+    - file_path: str  (relative to repo_root when given, so it matches PR diff paths)
+    - start_line: int (1-based, like GitHub)
     - end_line: int
     - source_text: str
     - node_type: str  (function_definition or class_definition)
     """
     try:
         chunks = []
+        display_path = Path(filepath).relative_to(repo_root).as_posix() if repo_root else str(filepath)
         cursor = parse_file(filepath).walk()
-        parse_tree(cursor.node, filepath, chunks)
+        parse_tree(cursor.node, display_path, chunks) #cursor.node is used to access the root node in the tree
 
         return chunks
     except Exception as e:
@@ -31,13 +35,17 @@ def chunk_repository(repo_path: str) -> list[dict]:
     """
     Walk an entire repo and chunk all Python files.
     """
+    root = Path(repo_path).resolve()
     chunks = []
-    for file in Path(repo_path).rglob("*"):
-        if file.is_file() and file.suffix == ".py" and "venv" not in file.parts:
-            chunks.extend(chunk_file(file))
+    for file in sorted(root.rglob("*.py")):
+        if file.is_file() and not SKIP_DIRS.intersection(file.relative_to(root).parts):
+            chunks.extend(chunk_file(file, root))
     return chunks
 
 def parse_file(filepath: str):
+    """
+    This function is used to return the tree
+    """
     with open(filepath, "r", encoding="utf-8") as f:
         source_code = f.read()
     source_bytes = bytes(source_code, "utf-8")
@@ -46,12 +54,11 @@ def parse_file(filepath: str):
 
 def parse_tree(node, filepath, chunks) -> list[dict]:
     if node.type == "function_definition" or node.type == "class_definition":
-        chunk = {}        
         chunk = {
             'function_name': None,
             'file_path': str(filepath),
-            'start_line': int(node.start_point[0]),
-            'end_line': int(node.end_point[0]),
+            'start_line': int(node.start_point[0]) + 1, # tree-sitter rows are 0-based
+            'end_line': int(node.end_point[0]) + 1,
             'source_text': node.text.decode('utf-8'),
             'node_type': str(node.type)
         }
@@ -62,9 +69,6 @@ def parse_tree(node, filepath, chunks) -> list[dict]:
             for child in node.children:
                 parse_tree(child, filepath, chunks)
         chunks.append(chunk)
-    
-        # print("\nFunction Node Found")
-        # display_node(node)
     else:
         for child in node.children:
             parse_tree(child, filepath, chunks)
@@ -74,11 +78,6 @@ if __name__ == "__main__":
 
     chunks = chunk_repository("./")
 
-    for chunk in chunks:
-        if isinstance(chunk['function_name'], bytes):
-            chunk['function_name'] = chunk['function_name']
-        if isinstance(chunk['source_text'], bytes):
-            chunk['source_text'] = chunk['source_text']
     for chunk in chunks:
         print(f"[{chunk['node_type']}] {chunk['function_name']}")
         print(f"  file      : {chunk['file_path']}")

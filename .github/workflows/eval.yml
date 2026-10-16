@@ -1,0 +1,41 @@
+name: eval
+# runs the RAGAS eval when agent/retrieval code changes on main (costs API credits)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["agent/**", "retrieval/**", "ingestion/**", "eval/**"]
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    services:
+      qdrant:
+        image: qdrant/qdrant
+        ports: ["6333:6333"]
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip when secrets are missing
+        id: check
+        run: |
+          if [ -z "$OPENAI_API_KEY" ] || [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "OPENAI_API_KEY / ANTHROPIC_API_KEY secrets not set; skipping eval"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.skip != 'true'
+        with:
+          python-version: "3.11"
+          cache: pip
+      - if: steps.check.outputs.skip != 'true'
+        run: pip install -r requirements.txt
+      - if: steps.check.outputs.skip != 'true'
+        run: python -m eval.harness
+      - if: steps.check.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-history
+          path: eval/results/history.jsonl

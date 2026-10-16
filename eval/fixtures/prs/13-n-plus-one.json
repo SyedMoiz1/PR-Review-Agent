@@ -1,0 +1,18 @@
+{
+  "id": "13-n-plus-one",
+  "title": "Show items on order history page",
+  "files": [
+    {
+      "filename": "shopapp/history.py",
+      "patch": "@@ -0,0 +1,10 @@\n+from shopapp.db import fetch_all\n+from shopapp.orders import list_orders\n+\n+\n+def order_history(user_id: int, page: int = 1) -> list[dict]:\n+    history = []\n+    for order in list_orders(user_id, page):\n+        items = fetch_all(\"SELECT * FROM order_items WHERE order_id = ?\", (order[\"id\"],))\n+        history.append({**order, \"items\": items})\n+    return history"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/history.py",
+      "line_number": 8,
+      "severity": "major",
+      "comment": "N+1 query: one query per order on the page. orders.items_for_orders batch-loads items for many orders in a single query."
+    }
+  ]
+}

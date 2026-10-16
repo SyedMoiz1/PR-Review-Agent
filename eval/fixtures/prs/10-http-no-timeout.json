@@ -1,0 +1,18 @@
+{
+  "id": "10-http-no-timeout",
+  "title": "Fetch exchange rates",
+  "files": [
+    {
+      "filename": "shopapp/rates.py",
+      "patch": "@@ -0,0 +1,7 @@\n+import json\n+import urllib.request\n+\n+\n+def usd_to_eur() -> float:\n+    with urllib.request.urlopen(\"https://api.example.com/rates/usd\") as resp:\n+        return json.loads(resp.read())[\"eur\"]"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/rates.py",
+      "line_number": 6,
+      "severity": "major",
+      "comment": "Outbound HTTP call without a timeout or retries can hang the worker. Use http_client.get_json, which applies HTTP_TIMEOUT_SECONDS and backoff."
+    }
+  ]
+}

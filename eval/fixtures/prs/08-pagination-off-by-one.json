@@ -1,0 +1,18 @@
+{
+  "id": "08-pagination-off-by-one",
+  "title": "Add pagination to admin order list",
+  "files": [
+    {
+      "filename": "shopapp/admin.py",
+      "patch": "@@ -0,0 +1,7 @@\n+from shopapp.config import PAGE_SIZE\n+from shopapp.db import fetch_all\n+\n+\n+def list_all_orders(page: int = 1) -> list[dict]:\n+    offset = page * PAGE_SIZE\n+    return fetch_all(\"SELECT * FROM orders ORDER BY created_at DESC LIMIT ? OFFSET ?\", (PAGE_SIZE, offset))"
+    }
+  ],
+  "expected": [
+    {
+      "file_path": "shopapp/admin.py",
+      "line_number": 6,
+      "severity": "major",
+      "comment": "Off-by-one: pages are 1-based (see orders.list_orders), so page 1 skips the first PAGE_SIZE orders. Use (page - 1) * PAGE_SIZE and validate page >= 1."
+    }
+  ]
+}

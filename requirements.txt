@@ -6,9 +6,9 @@ tree-sitter-python
 openai
 qdrant-client
 python-dotenv
-langchain
-langchain-openai
 anthropic
 ragas
 streamlit
+pandas
 httpx
+pytest
